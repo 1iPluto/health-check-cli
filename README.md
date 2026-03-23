@@ -2,8 +2,8 @@
 
 > A lightweight, zero-config CLI tool for Node.js developers to validate environment variables and inspect project health — right from the terminal.
 
-[![npm version](https://img.shields.io/npm/v/health-check-cli.svg)](https://www.npmjs.com/package/health-check-cli)
-[![npm downloads](https://img.shields.io/npm/dm/health-check-cli.svg)](https://www.npmjs.com/package/health-check-cli)
+[![npm version](https://img.shields.io/npm/v/%401ipluto%2Fhealth-check-cli.svg)](https://www.npmjs.com/package/@1ipluto/health-check-cli)
+[![npm downloads](https://img.shields.io/npm/dm/%401ipluto%2Fhealth-check-cli.svg)](https://www.npmjs.com/package/@1ipluto/health-check-cli)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![GitHub Pages](https://img.shields.io/badge/demo-github.io-blue)](https://1iPluto.github.io/health-check-cli)
@@ -37,7 +37,7 @@
 ### From npm (recommended)
 
 ```bash
-npm install -g health-check-cli
+npm install -g @1ipluto/health-check-cli
 ```
 
 ### Local development with `npm link`
@@ -51,7 +51,7 @@ npm link
 
 To unlink later:
 ```bash
-npm unlink -g health-check-cli
+npm unlink -g @1ipluto/health-check-cli
 ```
 
 ---
