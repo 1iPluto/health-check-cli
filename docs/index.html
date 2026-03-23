@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>health-check-cli — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --border: #1e2330;
+      --accent: #00e5a0;
+      --accent2: #7c6af7;
+      --warn: #f0a500;
+      --danger: #f05252;
+      --text: #e2e8f0;
+      --muted: #5a6378;
+      --green: #00e5a0;
+      --yellow: #f0a500;
+      --red: #f05252;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 80px 40px 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,229,160,0.08) 0%, transparent 70%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(0,229,160,0.1);
+      border: 1px solid rgba(0,229,160,0.3);
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.08em;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    h1 span {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .install-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+
+    .install-box span { color: var(--muted); }
+
+    .copy-btn {
+      background: rgba(0,229,160,0.1);
+      border: 1px solid rgba(0,229,160,0.25);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: rgba(0,229,160,0.2); }
+    .copy-btn.copied { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    section { margin-bottom: 80px; }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 32px;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── FEATURE GRID ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .icon-green { background: rgba(0,229,160,0.12); }
+    .icon-purple { background: rgba(124,106,247,0.12); }
+    .icon-orange { background: rgba(240,165,0,0.12); }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── TERMINAL ── */
+    .terminal-wrapper {
+      background: #080a0f;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .terminal-bar {
+      background: #111318;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .terminal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      flex: 1;
+      text-align: center;
+    }
+
+    .terminal-body {
+      padding: 28px 32px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.85;
+      min-height: 280px;
+      position: relative;
+    }
+
+    .t-prompt { color: var(--accent); }
+    .t-cmd { color: #e2e8f0; }
+    .t-muted { color: var(--muted); }
+    .t-green { color: var(--green); }
+    .t-yellow { color: var(--yellow); }
+    .t-red { color: var(--red); }
+    .t-bold { font-weight: 700; }
+    .t-dim { opacity: 0.5; }
+    .t-bg-green { background: var(--green); color: #0d0f14; padding: 0 8px; border-radius: 3px; }
+    .t-bg-red { background: var(--red); color: white; padding: 0 8px; border-radius: 3px; }
+
+    .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 15px;
+      background: var(--accent);
+      vertical-align: middle;
+      margin-left: 2px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── TABS ── */
+    .demo-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #080a0f;
+      color: var(--accent);
+      border-color: var(--border);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── STEPS ── */
+    .steps { counter-reset: step; }
+
+    .step {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 36px;
+      position: relative;
+    }
+
+    .step::after {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 44px;
+      bottom: -20px;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .step:last-child::after { display: none; }
+
+    .step-num {
+      counter-increment: step;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(0,229,160,0.1);
+      border: 1px solid rgba(0,229,160,0.25);
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .step-content h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      padding-top: 8px;
+    }
+
+    .step-content p, .step-content li {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .step-content code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 8px;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+
+    .step-content pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--accent);
+      overflow-x: auto;
+    }
+
+    /* ── COMMIT HISTORY ── */
+    .commits { list-style: none; }
+
+    .commit {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+
+    .commit:last-child { border-bottom: none; }
+
+    .commit-hash {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      background: rgba(124,106,247,0.1);
+      border: 1px solid rgba(124,106,247,0.2);
+      border-radius: 6px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .commit-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      border-radius: 6px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .type-feat { background: rgba(0,229,160,0.1); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
+    .type-docs { background: rgba(124,106,247,0.1); color: var(--accent2); border: 1px solid rgba(124,106,247,0.2); }
+    .type-chore { background: rgba(90,99,120,0.2); color: var(--muted); border: 1px solid var(--border); }
+    .type-fix { background: rgba(240,82,82,0.1); color: var(--red); border: 1px solid rgba(240,82,82,0.2); }
+
+    .commit-msg {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .commit-msg small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-top: 3px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── ANIMATION ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+
+    /* ── TYPING ANIMATION ── */
+    .typing-line {
+      opacity: 0;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .size-bar-container {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .size-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border);
+      width: 240px;
+      overflow: hidden;
+    }
+
+    .size-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--yellow);
+      width: 0%;
+      transition: width 1.5s ease 0.5s;
+    }
+
+    .size-bar-fill.animated { width: 31%; }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 2.2rem; }
+      .terminal-body { padding: 16px 18px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="badge fade-in">v1.0.0 · MIT License</div>
+  <h1 class="fade-in delay-1">🩺 <span>health-check-cli</span></h1>
+  <p class="tagline fade-in delay-2">
+    Validate your environment variables.<br/>
+    Inspect your node_modules. Stay healthy.
+  </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center" class="fade-in delay-3">
+    <div class="install-box">
+      <span>$</span>
+      <code id="install-cmd">npm install -g health-check-cli</code>
+      <button class="copy-btn" onclick="copyInstall()">copy</button>
+    </div>
+    <a href="https://github.com/1iPluto/health-check-cli" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 24px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--muted);text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">
+      ⭐ Star on GitHub
+    </a>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- FEATURES -->
+  <section class="fade-in delay-1">
+    <p class="section-label">What it does</p>
+    <h2>Everything your project needs to stay healthy</h2>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon icon-green">🔑</div>
+        <h3>Env Validator</h3>
+        <p>Reads .env.example, extracts all keys, and compares them against your local .env. Reports missing and empty variables in red.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-orange">📦</div>
+        <h3>node_modules Size</h3>
+        <p>Recursively calculates the total size of your node_modules folder. Displays a visual bar and contextual advice based on size.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon icon-purple">⚡</div>
+        <h3>Global CLI Command</h3>
+        <p>Install once with npm link or npm install -g. Run `health-check` anywhere in your terminal — no config files needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO TERMINAL -->
+  <section>
+    <p class="section-label">Live Demo</p>
+    <h2>See it in action</h2>
+
+    <div class="demo-tabs">
+      <button class="tab-btn active" onclick="switchTab('env')">health-check env</button>
+      <button class="tab-btn" onclick="switchTab('size')">health-check size</button>
+      <button class="tab-btn" onclick="switchTab('all')">health-check all</button>
+    </div>
+
+    <div class="terminal-wrapper">
+      <div class="terminal-bar">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <span class="terminal-title">~/my-project — bash</span>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <!-- content injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW TO RUN -->
+  <section>
+    <p class="section-label">Getting Started</p>
+    <h2>Step-by-step setup guide</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Install Node.js 18+</h4>
+          <p>Make sure you have Node.js version 18 or higher installed. Check your version:</p>
+          <pre>node --version</pre>
+          <p style="margin-top:8px">Download from <a href="https://nodejs.org" target="_blank">nodejs.org</a> if needed.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Clone the repository</h4>
+          <pre>git clone https://github.com/1iPluto/health-check-cli.git
+cd health-check-cli</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Install dependencies</h4>
+          <pre>npm install</pre>
+          <p style="margin-top:8px">This installs <code>commander</code>, <code>chalk</code>, and <code>ora</code>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Link globally with npm link</h4>
+          <pre>npm link</pre>
+          <p style="margin-top:8px">This creates a symlink so <code>health-check</code> is available as a global command in any terminal window.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h4>Navigate to any Node.js project and run it</h4>
+          <pre>cd ~/your-other-project
+health-check env
+health-check size
+health-check all</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <h4>(Optional) Unlink when done testing</h4>
+          <pre>npm unlink -g health-check-cli</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMIT HISTORY -->
+  <section>
+    <p class="section-label">GitHub Workflow</p>
+    <h2>Publish with a clean commit history</h2>
+    <p style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--muted);margin-bottom:28px;line-height:1.8">
+      Follow this commit sequence to tell a professional story on GitHub.
+      Uses <a href="https://www.conventionalcommits.org" target="_blank">Conventional Commits</a> format.
+    </p>
+
+    <ul class="commits">
+      <li class="commit">
+        <span class="commit-hash">a1b2c3d</span>
+        <span class="commit-type type-chore">chore</span>
+        <div class="commit-msg">
+          chore: initialize project with package.json and ES module config
+          <small>Sets up name, version, bin field, type:module, and engines.</small>
+        </div>
+      </li>
+      <li class="commit">
+        <span class="commit-hash">b2c3d4e</span>
+        <span class="commit-type type-feat">feat</span>
+        <div class="commit-msg">
+          feat: add main CLI entry point with commander setup
+          <small>index.js wires up the program with env, size, and all commands.</small>
+        </div>
+      </li>
+      <li class="commit">
+        <span class="commit-hash">c3d4e5f</span>
+        <span class="commit-type type-feat">feat</span>
+        <div class="commit-msg">
+          feat(env): implement .env validator against .env.example
+          <small>utils/envCheck.js — parses both files, reports missing/empty keys.</small>
+        </div>
+      </li>
+      <li class="commit">
+        <span class="commit-hash">d4e5f6a</span>
+        <span class="commit-type type-feat">feat</span>
+        <div class="commit-msg">
+          feat(size): add node_modules size checker with visual bar
+          <small>utils/sizeCheck.js — recursive size, human-readable output, MB bar.</small>
+        </div>
+      </li>
+      <li class="commit">
+        <span class="commit-hash">e5f6a7b</span>
+        <span class="commit-type type-fix">fix</span>
+        <div class="commit-msg">
+          fix: handle missing .env and node_modules gracefully
+          <small>All commands now show helpful tips instead of crashing.</small>
+        </div>
+      </li>
+      <li class="commit">
+        <span class="commit-hash">f6a7b8c</span>
+        <span class="commit-type type-docs">docs</span>
+        <div class="commit-msg">
+          docs: add README with install, usage, and project structure
+          <small>Covers npm link workflow, all commands, and options table.</small>
+        </div>
+      </li>
+    </ul>
+
+    <div style="margin-top:32px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px">
+      <p class="section-label" style="margin-bottom:14px">Full GitHub publish commands</p>
+      <pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:18px;font-family:'JetBrains Mono',monospace;font-size:0.83rem;color:var(--accent);overflow-x:auto;line-height:2">
+<span style="color:var(--muted)"># 1. Init git repo in the project folder</span>
+git init
+git add .
+git commit -m "chore: initialize project with package.json and ES module config"
+
+<span style="color:var(--muted)"># 2. Create repo on GitHub (via gh CLI or github.com), then:</span>
+git remote add origin https://github.com/1iPluto/health-check-cli.git
+git branch -M main
+
+<span style="color:var(--muted)"># 3. Stage and commit each logical piece separately</span>
+git add index.js
+git commit -m "feat: add main CLI entry point with commander setup"
+
+git add utils/envCheck.js
+git commit -m "feat(env): implement .env validator against .env.example"
+
+git add utils/sizeCheck.js
+git commit -m "feat(size): add node_modules size checker with visual bar"
+
+git add README.md
+git commit -m "docs: add README with install, usage, and project structure"
+
+<span style="color:var(--muted)"># 4. Push everything</span>
+git push -u origin main</pre>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>health-check-cli · MIT License · Built with Node.js, commander, chalk, ora</p>
+</footer>
+
+<script>
+  // ── TERMINAL CONTENT ──────────────────────────────────────────────────────
+  const terminalContent = {
+    env: `
+<div class="typing-line"><span class="t-prompt">$</span> <span class="t-cmd">health-check env</span></div>
+<div class="typing-line t-muted">  ✔ Parsed <span style="color:#e2e8f0">.env.example</span> — found <span style="color:#e2e8f0">4</span> key(s) to validate.</div>
+<div class="typing-line"></div>
+<div class="typing-line"><span style="opacity:0.6">  Environment Variable Report:</span></div>
+<div class="typing-line"></div>
+<div class="typing-line t-green">  ✔  DATABASE_URL</div>
+<div class="typing-line t-green">  ✔  JWT_SECRET</div>
+<div class="typing-line t-yellow">  ⚠  REDIS_URL <span class="t-dim">(defined but empty)</span></div>
+<div class="typing-line t-red">  ✖  STRIPE_SECRET <span class="t-dim">(missing from .env)</span></div>
+<div class="typing-line"></div>
+<div class="typing-line"><span class="t-bg-red"> ✖ 2 issue(s) found </span> <span class="t-dim">(2/4 variables OK)</span></div>
+<div class="typing-line t-red">  2 key(s) are missing or empty in .env</div>
+<div class="typing-line"></div>
+<div class="typing-line"><span class="t-prompt">$</span> <span class="cursor-blink"></span></div>
+`,
+    size: `
+<div class="typing-line"><span class="t-prompt">$</span> <span class="t-cmd">health-check size</span></div>
+<div class="typing-line t-muted">  ✔ Scan complete in <span style="color:#e2e8f0">2.14s</span></div>
+<div class="typing-line"></div>
+<div class="typing-line"><span style="opacity:0.6">  node_modules Size Report:</span></div>
+<div class="typing-line"></div>
+<div class="typing-line">  <span class="t-bold" style="color:#e2e8f0">Path:</span>   <span class="t-dim">/home/user/my-project/node_modules</span></div>
+<div class="typing-line">  <span class="t-bold" style="color:#e2e8f0">Size:</span>   <span class="t-yellow t-bold">312.47 MB</span></div>
+<div class="typing-line">  <span class="t-bold" style="color:#e2e8f0">Status:</span> <span class="t-dim">Average size. Consider auditing with \`npm ls\`.</span></div>
+<div class="typing-line"></div>
+<div class="typing-line size-bar-line">  [<span class="t-dim">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</span>] <span class="t-yellow">312.47 MB</span> <span class="t-dim">/ ~1 GB scale</span></div>
+<div class="typing-line"></div>
+<div class="typing-line"><span class="t-prompt">$</span> <span class="cursor-blink"></span></div>
+`,
+    all: `
+<div class="typing-line"><span class="t-prompt">$</span> <span class="t-cmd">health-check all</span></div>
+<div class="typing-line"></div>
+<div class="typing-line" style="color:#7c6af7">  ╔══════════════════════════════════╗</div>
+<div class="typing-line" style="color:#7c6af7">  ║      Project Health Report       ║</div>
+<div class="typing-line" style="color:#7c6af7">  ╚══════════════════════════════════╝</div>
+<div class="typing-line"></div>
+<div class="typing-line t-muted">  ✔ Parsed .env.example — found 4 key(s).</div>
+<div class="typing-line t-green">  ✔  DATABASE_URL</div>
+<div class="typing-line t-green">  ✔  JWT_SECRET</div>
+<div class="typing-line t-green">  ✔  REDIS_URL</div>
+<div class="typing-line t-green">  ✔  STRIPE_SECRET</div>
+<div class="typing-line"></div>
+<div class="typing-line"><span class="t-bg-green"> ✔ All 4 variable(s) are present and set. </span></div>
+<div class="typing-line"></div>
+<div class="typing-line t-muted">  ✔ Scan complete in 1.88s</div>
+<div class="typing-line t-green">  Size:   <span class="t-bold">84.22 MB</span> <span class="t-dim">— Lean and clean.</span></div>
+<div class="typing-line"></div>
+<div class="typing-line"><span class="t-prompt">$</span> <span class="cursor-blink"></span></div>
+`
+  };
+
+  let currentTab = 'env';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', ['env','size','all'][i] === tab);
+    });
+    renderTerminal(tab);
+  }
+
+  function renderTerminal(tab) {
+    const body = document.getElementById('terminal-body');
+    body.innerHTML = terminalContent[tab];
+
+    // Animate lines
+    const lines = body.querySelectorAll('.typing-line');
+    lines.forEach((line, i) => {
+      setTimeout(() => {
+        line.style.opacity = '1';
+        line.style.transition = 'opacity 0.15s';
+        // Animate size bar if present
+        const fill = line.querySelector('.size-bar-fill');
+        if (fill) setTimeout(() => fill.classList.add('animated'), 200);
+      }, i * 80);
+    });
+  }
+
+  // Initial render
+  renderTerminal('env');
+
+  // ── COPY BUTTON ─────────────────────────────────────────────────────────
+  function copyInstall() {
+    const cmd = document.getElementById('install-cmd').textContent;
+    navigator.clipboard.writeText(cmd).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
