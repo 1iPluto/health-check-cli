@@ -1,0 +1,49 @@
+{
+  "name": "health-check-cli",
+  "version": "1.0.0",
+  "description": "A lightweight CLI tool to validate environment variables and check project health.",
+  "type": "module",
+  "bin": {
+    "health-check": "./index.js"
+  },
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "utils/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "prepublishOnly": "node --check index.js && node --check utils/envCheck.js && node --check utils/sizeCheck.js"
+  },
+  "keywords": [
+    "cli",
+    "env",
+    "validator",
+    "health-check",
+    "devtools",
+    "nodejs",
+    "dotenv",
+    "node-modules",
+    "developer-tools"
+  ],
+  "author": "Your Name <you@example.com>",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1iPluto/health-check-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/1iPluto/health-check-cli/issues"
+  },
+  "homepage": "https://1iPluto.github.io/health-check-cli"
+}
